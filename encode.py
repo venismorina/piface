@@ -16,7 +16,7 @@ for i in os.walk("dataset/images"):
 
 		dataset = "dataset\\images\\" + path
 		encodes = "dataset/pickles/{}({}).pickle".format(path,r.text)
-		method = "hog"
+		method = "cnn"
 
 		print("[INFO] Encoding {}({}) ...".format(path,r.text))
 

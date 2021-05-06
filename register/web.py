@@ -129,7 +129,7 @@ def generate(vs, data, dict):
 
             crop_img = frame[y:y+h, x:x+w]
 
-            if skip > 40:
+            if skip > 25:
                 cv2.imwrite("../dataset/images/"+path+"/"+str(i)+".jpg", crop_img)
                 dict -= 1
                 skip = 0
