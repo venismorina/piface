@@ -6,6 +6,9 @@ import os
 import requests
 import shutil
 from register import config
+from datetime import datetime
+
+now = datetime.now()
 
 
 for i in os.walk("dataset/images"):
@@ -59,3 +62,6 @@ for i in os.walk("dataset/images"):
 		print("\n")
 
 import merger
+dt_string = now.strftime("%d-%m-%Y %H %M %S")
+shutil.move('encodings.pickle', 'dataset/backup/encodings{}.pickle'.format(dt_string))
+print("[INFO] backup created")
