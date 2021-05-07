@@ -8,7 +8,9 @@ import numpy as np
 import requests
 import base64
 import threading
+import serial
 import merger
+
 from datetime import datetime
 from register import config
 
@@ -34,11 +36,17 @@ dict_names = r.json()
 
 time.sleep(2.0)
 
+ser = serial.Serial('com6', 9600, timeout=1)
+ser.flush()
+
+ser_buzzer = serial.Serial('com5', 9600, timeout=1)
+ser_buzzer.flush()
 
 def send_request(url, data):
     r = requests.post(url, data=data)
     f = open("error.html",  "w+", encoding="utf-8")
     f.write(r.text)
+
 
 
 while True:
@@ -100,12 +108,15 @@ while True:
                 threading.Thread(target=send_request,
                                  args=(url, post_data,)).start()
                 detected = True
+                ser.write("10000\nWelcome\n{}\n".format(str.title(current_name)).encode("utf-8"))
+                ser_buzzer.write(b"1\n")
             img[:] = (21, 156, 84)
             output = str.title(current_name) + " has been detected!"
 
         elif name_counter > 0:
             img[:] = (4, 187, 255)
             output = "Detecting : " + str.title(current_name) + "!"
+            ser.write("500\nDetecting\n{}\n".format(str.title(current_name)).encode("utf-8"))
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     text = output
