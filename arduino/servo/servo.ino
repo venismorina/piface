@@ -20,7 +20,7 @@ void detect(){
 
   for (pos = 0; pos <= 90; pos += 1) 
   myservo.write(pos); 
-  delay(2000);
+  delay(10000);
   tone(buzzer, 1000); 
   delay(200);        
   noTone(buzzer);               

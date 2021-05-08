@@ -10,18 +10,22 @@ import base64
 import threading
 import serial
 import merger
+import json
 
 from datetime import datetime
 from register import config
 
 cascade = "haarcascade.xml"
 encodes = "encodings.pickle"
-display = 1
+display = True
 
 name_counter = ""
 current_id = ""
 detected = False
-img = np.zeros((1080, 1920, 3), np.uint8)
+
+if display:
+    welcome = {"text" : "", "color":(21, 156, 84)}
+    img = np.zeros((1080, 1920, 3), np.uint8)
 
 print("[INFO] loading encodings + face detector...")
 data = pickle.loads(open(encodes, "rb").read())
@@ -43,15 +47,29 @@ ser_buzzer = serial.Serial('com5', 9600, timeout=1)
 ser_buzzer.flush()
 
 def send_request(url, data):
+    global welcome
     r = requests.post(url, data=data)
-    f = open("error.html",  "w+", encoding="utf-8")
-    f.write(r.text)
-
+    # f = open("error.html",  "w+", encoding="utf-8")
+    # f.write(r.text)
+    res = json.loads(r.text)
+    if res['type'] == 0:
+        ser.write("10000\nWelcome\n{}\n".format(str.title(res['name'])).encode("utf-8"))
+    else:
+        ser.write("10000\nByeee\n{}\n".format(str.title(res['name'])).encode("utf-8"))
+    if display:
+        if res['type'] == 1:
+            welcome['text'] = "Bye " + str.title(res['name']) + "!"
+            welcome['color'] = (30, 76, 245)
+        else:
+            welcome['text'] = "Welcome " + str.title(res['name']) + "!"
+            welcome['color'] = (245, 30, 80)
 
 
 while True:
     frame = vs.read()
-    img[:] = (0, 0, 0)
+    if display:
+        img[:] = (0, 0, 0)
+        output = "Look at the camera!"
 
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -64,7 +82,7 @@ while True:
 
     encodings = face_recognition.face_encodings(rgb, boxes)
     names = []
-    output = "Look at the camera!"
+    
 
     for encoding in encodings:
         matches = face_recognition.compare_faces(data["encodings"],
@@ -97,6 +115,9 @@ while True:
         if name_counter > 5:
             if not detected:
                 now = datetime.now()
+                if display:
+                    welcome["text"] = str.title(current_name) + " has been detected!"
+                    welcome['color'] = (21, 156, 84)
                 print(current_name + " has been detected!" + str(now))
                 retval, buffer = cv2.imencode('.jpg', frame)
                 base_image = base64.b64encode(buffer)
@@ -108,27 +129,32 @@ while True:
                 threading.Thread(target=send_request,
                                  args=(url, post_data,)).start()
                 detected = True
-                ser.write("10000\nWelcome\n{}\n".format(str.title(current_name)).encode("utf-8"))
+                ser.write("1000\n{}\ndetected\n".format(str.title(current_name)).encode("utf-8"))
                 ser_buzzer.write(b"1\n")
-            img[:] = (21, 156, 84)
-            output = str.title(current_name) + " has been detected!"
+            if display:
+                img[:] = welcome['color']
+                output = welcome['text']
 
         elif name_counter > 0:
-            img[:] = (4, 187, 255)
-            output = "Detecting : " + str.title(current_name) + "!"
+            if(display):
+                img[:] = (4, 187, 255)
+                output = "Detecting : " + str.title(current_name) + "!"
             ser.write("500\nDetecting\n{}\n".format(str.title(current_name)).encode("utf-8"))
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    text = output
+        break
 
-    textsize = cv2.getTextSize(text, font, 2.5, 8)[0]
 
-    textX = int((img.shape[1] - textsize[0]) / 2)
-    textY = int((img.shape[0] + textsize[1]) / 2)
+    if display:
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        text = output
 
-    cv2.putText(img, text, (textX, textY), font, 2.5, (255, 255, 255), 8)
+        textsize = cv2.getTextSize(text, font, 2.5, 8)[0]
 
-    if display > 0:
+        textX = int((img.shape[1] - textsize[0]) / 2)
+        textY = int((img.shape[0] + textsize[1]) / 2)
+
+        cv2.putText(img, text, (textX, textY), font, 2.5, (255, 255, 255), 8)
+
         cv2.namedWindow('Frame', cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty(
             'Frame', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
