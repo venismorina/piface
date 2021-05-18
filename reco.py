@@ -9,14 +9,14 @@ import requests
 import base64
 import threading
 import serial
-import merger
+# from register import merger
 import json
 
 from datetime import datetime
 from register import config
 
-cascade = "haarcascade.xml"
-encodes = "encodings.pickle"
+cascade = "register/haarcascade.xml"
+encodes = "register/encodings.pickle"
 display = True
 
 name_counter = ""
@@ -40,11 +40,11 @@ dict_names = r.json()
 
 time.sleep(2.0)
 
-ser = serial.Serial('com6', 9600, timeout=1)
-ser.flush()
+# ser = serial.Serial('com6', 9600, timeout=1)
+# ser.flush()
 
-ser_buzzer = serial.Serial('com5', 9600, timeout=1)
-ser_buzzer.flush()
+# ser_buzzer = serial.Serial('com5', 9600, timeout=1)
+# ser_buzzer.flush()
 
 def send_request(url, data):
     global welcome
@@ -52,10 +52,10 @@ def send_request(url, data):
     # f = open("error.html",  "w+", encoding="utf-8")
     # f.write(r.text)
     res = json.loads(r.text)
-    if res['type'] == 0:
-        ser.write("10000\nWelcome\n{}\n".format(str.title(res['name'])).encode("utf-8"))
-    else:
-        ser.write("10000\nByeee\n{}\n".format(str.title(res['name'])).encode("utf-8"))
+    # if res['type'] == 0:
+    #     ser.write("10000\nWelcome\n{}\n".format(str.title(res['name'])).encode("utf-8"))
+    # else:
+    #     ser.write("10000\nByeee\n{}\n".format(str.title(res['name'])).encode("utf-8"))
     if display:
         if res['type'] == 1:
             welcome['text'] = "Bye " + str.title(res['name']) + "!"
@@ -129,8 +129,8 @@ while True:
                 threading.Thread(target=send_request,
                                  args=(url, post_data,)).start()
                 detected = True
-                ser.write("1000\n{}\ndetected\n".format(str.title(current_name)).encode("utf-8"))
-                ser_buzzer.write(b"1\n")
+                # ser.write("1000\n{}\ndetected\n".format(str.title(current_name)).encode("utf-8"))
+                # ser_buzzer.write(b"1\n")
             if display:
                 img[:] = welcome['color']
                 output = welcome['text']
@@ -139,7 +139,7 @@ while True:
             if(display):
                 img[:] = (4, 187, 255)
                 output = "Detecting : " + str.title(current_name) + "!"
-            ser.write("500\nDetecting\n{}\n".format(str.title(current_name)).encode("utf-8"))
+            # ser.write("500\nDetecting\n{}\n".format(str.title(current_name)).encode("utf-8"))
 
         break
 

@@ -10,16 +10,33 @@
 </head>
 
 <body class="my-login-page">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js" integrity="sha512-7x3zila4t2qNycrtZ31HO0NnJr8kg2VI67YLoRSyi9hGhRN66FHYWr7Axa9Y1J9tGYHVBPqIjSE1ogHrJTz51g==" crossorigin="anonymous"></script>
 	<section class="h-100">
 		<div class="container h-100">
 			<div class="row justify-content-md-center" style="padding-top: 100px;">
-				
-					<div class="card fat pb-5 px-4" >
+				<script>
+					function imgLoaded(imgElement) {
+						console.log("hello");
+						imgElement.style.display = "block";
+						document.getElementById("loading").style.display="none";
+					}
+				</script>
+					<div class="card fat px-4" >
 						<div class="card-body">
 							<div class="card-wrapper-lg">
-                <a href="/" style="width: 100px;" class="btn btn-primary btn-block mb-4">< prapa</a>
-                <img width="100%" style="border-radius: 20px;" src="{{ url_for('video_feed') }}">
-                <p>{{ data }}</p>
+                <a href="/" style="width: 120px;" class="btn btn-primary btn-block mb-4"><i width="18px" data-feather="chevron-left"></i> Prapa</a>
+				<div id="loading" style="background-color: #1d1e1f; width: 100%; height: 562.5px;border-radius: 20px;">
+					<div class="content">
+					<div class="loading">
+					<p>loading</p>
+						  <span></span>
+					   </div>
+					</div>
+					</div>
+
+                <img width="100%" id="cam" onload="imgLoaded(this)" style="border-radius: 20px; display: none;" src="{{ url_for('video_feed') }}">
+				 
+                <a href="/encode" style="width: 120px; float: right;" class="btn btn-primary btn-block mt-4">Vazhdo <i width="18px" data-feather="chevron-right"></i></a>
               </div>
 						</div>
 					</div>
@@ -29,9 +46,12 @@
 		</div>
 	</section>
 
+	<script>
+		feather.replace()
+	  </script>
+
 	<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-	<script src="/static/js/my-login.js"></script>
 </body>
 </html>

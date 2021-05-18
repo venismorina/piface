@@ -7,6 +7,7 @@ int pos = 0;
 void setup() {
   Serial.begin(9600);
   pinMode(buzzer, OUTPUT); 
+  detect();
 }
 
 void detect(){
@@ -20,7 +21,7 @@ void detect(){
 
   for (pos = 0; pos <= 90; pos += 1) 
   myservo.write(pos); 
-  delay(10000);
+  delay(1000);
   tone(buzzer, 1000); 
   delay(200);        
   noTone(buzzer);               

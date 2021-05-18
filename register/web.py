@@ -27,6 +27,7 @@ from subprocess import Popen, PIPE, STDOUT, DEVNULL
 from textwrap import dedent
 import shutil
 import config
+import glob
 
 from flask_wtf import FlaskForm
 from wtforms import SelectField
@@ -49,22 +50,21 @@ app.config['SECRET_KEY'] = 'pie'
 detector = cv2.CascadeClassifier("haarcascade.xml")
 
 path = ""
+video_done = False
 
 
 class LoginForm(FlaskForm):
-    name = StringField('Emri')
+    name = StringField('Emri dhe Mbiemri')
     myChoices = [
-        ('1', 'Prishtine'),
+        ('1', 'Prishtinë'),
         ('2', 'Drenas'),
-        ('3', 'Ferizaj'),
+        ('3', 'Skenderaj')
     ]
     place = SelectField("Vendpunimi", choices=myChoices)
-    submit = SubmitField('Submit')
+    submit = SubmitField('Regjistro')
 
 
-# initialize the video stream and allow the camera sensor to
-# warmup
-vs = VideoStream(src=0).stop()
+vs = VideoStream(src=1).stop()
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -74,8 +74,8 @@ def index():
         vs.stop()
     except Exception as e:
         print(e)
-    # return the rendered template
     form = LoginForm()
+    # encode = len(os.walk("../dataset/images")) > 0
     if form.validate_on_submit():
         name = form.name.data
         place = form.place.data
@@ -99,7 +99,6 @@ def cam():
 
 
 def generate(vs, data, dict):
-
     skip = data['skip']
     i = data['i']
 
@@ -115,42 +114,32 @@ def generate(vs, data, dict):
         gray2 = cv2.filter2D(frame, -1, kernel)
 
         rects = detector.detectMultiScale(gray, scaleFactor=1.1,
-                                      minNeighbors=5, minSize=(30, 30),
-                                      flags=cv2.CASCADE_SCALE_IMAGE)
+                                          minNeighbors=5, minSize=(30, 30),
+                                          flags=cv2.CASCADE_SCALE_IMAGE)
         boxes = [(y, x + w, y + h, x) for (x, y, w, h) in rects]
 
         for (top, right, bottom, left) in boxes:
-		# draw the predicted face name on the image
             x = left - 20
             y = top - 40
             w = right - x + 10
             h = bottom - y + 20
-            # cv2.rectangle(frame,(x,y),(w + x,h +y),(0,255,0),3)
 
             crop_img = frame[y:y+h, x:x+w]
 
             if skip > 25:
-                cv2.imwrite("../dataset/images/"+path+"/"+str(i)+".jpg", crop_img)
+                cv2.imwrite("../dataset/images/"+path +
+                            "/"+str(i)+".jpg", crop_img)
                 dict -= 1
                 skip = 0
 
-        # grab the current timestamp and draw it on the frame
         timestamp = datetime.datetime.now()
         cv2.putText(frame, str(dict), (10, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1)
-
-        # if the total number of frames has reached a sufficient
-        # number to construct a reasonable background model, then
-        # continue to process the frame
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 123, 0), 1)
 
         if dict < 1:
             vs.stop()
             break
-        # update the background model and increment the total number
-        # of frames read thus far
 
-        # acquire the lock, set the output frame, and release the
-        # lock
         (flag, encodedImage) = cv2.imencode(".jpg", frame)
 
         if not flag:
@@ -160,22 +149,200 @@ def generate(vs, data, dict):
               bytearray(encodedImage) + b'\r\n')
 
 
+def g():
+    now = datetime.datetime.now()
+
+    yield """
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="author" content="Kodinger">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>My Login Page</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="/static/css/my-login.css">
+    <style>
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  opacity: 0.2; 
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+code {
+    color: rgb(65,157,255)
+}
+</style>
+</head>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	<script>
+    function bottom(){
+        var console = document.querySelector('#console');
+    console.scrollTop = console.scrollHeight - console.clientHeight;
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.28.0/feather.min.js" integrity="sha512-7x3zila4t2qNycrtZ31HO0NnJr8kg2VI67YLoRSyi9hGhRN66FHYWr7Axa9Y1J9tGYHVBPqIjSE1ogHrJTz51g==" crossorigin="anonymous"></script>
+	
+<body class="my-login-page">
+	<section class="h-100">
+		<div class="container h-100">
+			<div class="row justify-content-md-center" style="padding-top: 100px;">
+				
+					<div class="card fat pb-5 px-4" >
+						<div class="card-body">
+							<div class="card-wrapper-lg">
+                <a href="/" style="width: 120px;" class="btn btn-primary btn-block mb-4"><i width="18px" data-feather="home"></i></span> Shtëpia</a>
+                <script>
+  feather.replace()
+</script>
+               <div id="console" style="overflow: auto;background-color: #1d1e1f;height: 400px;padding: 20px;border-radius: 15px;" id="content">
+               """
+    for i in os.walk("../dataset/images"):
+        for path in i[1]:
+
+            url = 'http://{}/sendreq/get-name?id={}&admin={}&password={}'.format(
+                config.site, path, config.admin, config.password)
+            r = requests.get(url)
+
+            dataset = "..\\dataset\\images\\" + path
+            encodes = "../dataset/pickles/{}({}).pickle".format(path, r.text)
+            method = "cnn"
+
+            yield "<code>"
+            yield("[MESAZH] duke u procesuar {}({}) ...".format(path, r.text))
+            yield "</code><br>"
+            yield "<script>bottom();</script>"
+
+            yield "<code>"
+            yield("[MESAZH] duke i numëruar fytyrat...")
+            yield "</code><br>"
+            yield "<script>bottom();</script>"
+
+            imagePaths = list(paths.list_images(dataset))
+
+            knownEncodings = []
+            knownNames = []
+
+            for (i, imagePath) in enumerate(imagePaths):
+
+                yield "<code>"
+                yield("[MESAZH] duke procesuar foton {}/{}".format(i + 1,
+                                                             len(imagePaths)))
+                yield "</code><br>"
+                yield "<script>bottom();</script>"
+
+                name = imagePath.split(os.path.sep)[-2]
+
+                image = cv2.imread(imagePath)
+                rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+                boxes = face_recognition.face_locations(rgb,
+                                                        model=method)
+
+                encodings = face_recognition.face_encodings(rgb, boxes)
+
+                for encoding in encodings:
+                    knownEncodings.append(encoding)
+                    knownNames.append(name)
+
+            yield "<code>"
+            yield("[MESAZH] duke i renditur enkodimet...")
+            yield "</code><br>"
+            yield "<script>bottom();</script>"
+
+            data = {"encodings": knownEncodings, "names": knownNames}
+            f = open(encodes, "wb")
+            f.write(pickle.dumps(data))
+            f.close()
+
+            yield "<code>"
+            yield("[MESAZH] {} përfundoi!".format(path))
+            yield "</code><br>"
+            yield "<script>bottom();</script>"
+
+            shutil.rmtree("../dataset/images/{}".format(path))
+
+            yield("\n")
+
+    def dict_append(dict, dict1):
+        for i, j in dict.items():
+            dict[i] += dict1[i]
+        return dict
+
+    main = {"pickle": [], "encodings": [], 'names': []}
+
+    yield "<code>"
+    yield("[MESAZH] duke i bashkuar enkodimet...")
+    yield "</code><br>"
+    yield "<script>bottom();</script>"
+
+    for i in glob.glob("../dataset/pickles/*.pickle"):
+        data = pickle.loads(open(i, "rb").read())
+        data['pickle'] = [i]
+        dict_append(main,data)
+
+    yield "<code>"
+    yield("[MESAZH] enkodimet u bashkuan.")
+    yield "</code><br>"
+    yield "<script>bottom();</script>"
+
+    f = open("encodings.pickle", "wb")
+    f.write(pickle.dumps(main))
+    f.close()
+    f = open("encodings1.pickle", "wb")
+    f.write(pickle.dumps(main))
+    f.close()
+    
+    dt_string = now.strftime("%d-%m-%Y %H %M %S")
+    shutil.move('encodings1.pickle',
+                '../dataset/backup/encodings{}.pickle'.format(dt_string))
+
+    # yield "<code>"
+    # yield("[INFO] backup created")
+    # yield "</code><br>"
+    # yield "<script>bottom();</script>"
+
+
+@app.route("/encode")
+def encode():
+    try:
+        vs.stop()
+    except Exception as e:
+        print(e)
+    return Response(g(), mimetype='text/html')
+
+
 @app.route("/video_feed")
 def video_feed():
-    global vs
+    global vs, video_done
     vs = VideoStream(src=0).start()
     i = 0
     skip = 0
     dict = 15
     direction = "None"
-    # return the response generated along with the specific media
-    # type (mime type)
     return Response(generate(vs, {'skip': skip, 'i': i, 'direction': direction}, dict), mimetype="multipart/x-mixed-replace; boundary=frame")
 
 
-# check to see if this is the main thread of execution
 if __name__ == '__main__':
-    # construct the argument parser and parse command line arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-i", "--ip", type=str, default="127.0.0.1",
                     help="ip address of the device")
@@ -185,8 +352,5 @@ if __name__ == '__main__':
                     help="# of frames used to construct the background model")
     args = vars(ap.parse_args())
 
-    # start a thread that will perform motion detection
-
-    # start the flask app
     app.run(host=args["ip"], port=args["port"], debug=True,
             threaded=True, use_reloader=False)
