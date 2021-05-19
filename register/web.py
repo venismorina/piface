@@ -64,7 +64,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Regjistro')
 
 
-vs = VideoStream(src=1).stop()
+vs = VideoStream(src=0).stop()
 
 
 @app.route("/", methods=['GET', 'POST'])
