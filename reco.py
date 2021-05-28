@@ -18,14 +18,24 @@ from register import config
 cascade = "register/haarcascade.xml"
 encodes = "register/encodings.pickle"
 display = True
+arduino = False
 
 name_counter = ""
 current_id = ""
 detected = False
 
+
 if display:
     welcome = {"text" : "", "color":(21, 156, 84)}
     img = np.zeros((1080, 1920, 3), np.uint8)
+
+
+print("[INFO] downloading encodings...")
+
+url = 'http://{}/static/encodings.pickle'.format(config.site)
+r = requests.get(url, allow_redirects=True)
+open('register/encodings.pickle', 'wb').write(r.content)
+
 
 print("[INFO] loading encodings + face detector...")
 data = pickle.loads(open(encodes, "rb").read())
@@ -38,13 +48,15 @@ vs = VideoStream(src=0).start()
 r = requests.get("http://{}/sendreq/get-names?admin={}&password={}".format(config.site, config.admin, config.password))
 dict_names = r.json()
 
+
 time.sleep(2.0)
 
-ser = serial.Serial('com6', 9600, timeout=1)
-ser.flush()
+if arduino:
+    ser = serial.Serial('com6', 9600, timeout=1)
+    ser.flush()
 
-ser_buzzer = serial.Serial('com5', 9600, timeout=1)
-ser_buzzer.flush()
+    ser_buzzer = serial.Serial('com5', 9600, timeout=1)
+    ser_buzzer.flush()
 
 def send_request(url, data):
     global welcome
@@ -52,10 +64,11 @@ def send_request(url, data):
     # f = open("error.html",  "w+", encoding="utf-8")
     # f.write(r.text)
     res = json.loads(r.text)
-    if res['type'] == 0:
-        ser.write("10000\nWelcome\n{}\n".format(str.title(res['name'])).encode("utf-8"))
-    else:
-        ser.write("10000\nByeee\n{}\n".format(str.title(res['name'])).encode("utf-8"))
+    if arduino:
+        if res['type'] == 0:
+            ser.write("10000\nMiresevini\n{}\n".format(str.title(res['name'])).encode("utf-8"))
+        else:
+            ser.write("10000\nDiten e mire\n{}\n".format(str.title(res['name'])).encode("utf-8"))
     if display:
         if res['type'] == 1:
             welcome['text'] = "Bye " + str.title(res['name']) + "!"
@@ -126,11 +139,13 @@ while True:
                 post_data = {'admin': config.admin, "password": config.password,
                              "id": current_id, "name": post_name, "image": base_image}
                 url = "http://"+config.site+"/sendreq/register-face"
+                print(url)
                 threading.Thread(target=send_request,
                                  args=(url, post_data,)).start()
                 detected = True
-                ser.write("1000\n{}\ndetected\n".format(str.title(current_name)).encode("utf-8"))
-                ser_buzzer.write(b"1\n")
+                if arduino:
+                    ser.write("1000\n{}\nu verifikua\n".format(str.title(current_name)).encode("utf-8"))
+                    ser_buzzer.write(b"1\n")
             if display:
                 img[:] = welcome['color']
                 output = welcome['text']
@@ -139,7 +154,8 @@ while True:
             if(display):
                 img[:] = (4, 187, 255)
                 output = "Detecting : " + str.title(current_name) + "!"
-            ser.write("500\nDetecting\n{}\n".format(str.title(current_name)).encode("utf-8"))
+            if arduino:
+                ser.write("500\nDuke verifikuar\n{}\n".format(str.title(current_name)).encode("utf-8"))
 
         break
 

@@ -316,10 +316,12 @@ code {
     shutil.move('encodings1.pickle',
                 '../dataset/backup/encodings{}.pickle'.format(dt_string))
 
-    # yield "<code>"
-    # yield("[INFO] backup created")
-    # yield "</code><br>"
-    # yield "<script>bottom();</script>"
+    r = requests.post('http://{}/sendreq/upload-encodings'.format(config.site), data={"title" : 'encodings{}'.format(dt_string)} ,files={'file': open("encodings.pickle", 'rb')})
+    print(r)
+    yield "<code>"
+    yield("[MESAZH] enkodimet u derguan në databazë.")
+    yield "</code><br>"
+    yield "<script>bottom();</script>"
 
 
 @app.route("/encode")
