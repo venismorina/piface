@@ -339,7 +339,7 @@ def video_feed():
     vs = VideoStream(src=0).start()
     i = 0
     skip = 0
-    dict = 15
+    dict = 20
     direction = "None"
     return Response(generate(vs, {'skip': skip, 'i': i, 'direction': direction}, dict), mimetype="multipart/x-mixed-replace; boundary=frame")
 

@@ -32,7 +32,7 @@ if display:
 
 print("[INFO] downloading encodings...")
 
-url = 'http://{}/static/encodings.pickle'.format(config.site)
+url = 'https://{}/static/encodings.pickle'.format(config.site)
 r = requests.get(url, allow_redirects=True)
 open('register/encodings.pickle', 'wb').write(r.content)
 
@@ -45,7 +45,7 @@ detector = cv2.CascadeClassifier(cascade)
 print("[INFO] starting video stream...")
 vs = VideoStream(src=0).start()
 
-r = requests.get("http://{}/sendreq/get-names?admin={}&password={}".format(config.site, config.admin, config.password))
+r = requests.get("https://{}/sendreq/get-names?admin={}&password={}".format(config.site, config.admin, config.password))
 dict_names = r.json()
 
 
@@ -61,8 +61,9 @@ if arduino:
 def send_request(url, data):
     global welcome
     r = requests.post(url, data=data)
-    # f = open("error.html",  "w+", encoding="utf-8")
-    # f.write(r.text)
+    f = open("error.html",  "w+", encoding="utf-8")
+    f.write(r.text)
+    # print(r.text)
     res = json.loads(r.text)
     if arduino:
         if res['type'] == 0:
@@ -138,7 +139,7 @@ while True:
                     now.strftime("%d-%m-%Y_%H-%M-%S") + ".jpg"
                 post_data = {'admin': config.admin, "password": config.password,
                              "id": current_id, "name": post_name, "image": base_image}
-                url = "http://"+config.site+"/sendreq/register-face"
+                url = "https://"+config.site+"/sendreq/register-face"
                 print(url)
                 threading.Thread(target=send_request,
                                  args=(url, post_data,)).start()
